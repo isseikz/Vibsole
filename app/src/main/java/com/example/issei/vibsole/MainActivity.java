@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -202,7 +203,43 @@ public class MainActivity extends AppCompatActivity {
             super.onServicesDiscovered(gatt, status);
             Log.i(APP_NAME,"Service discovered: " + gatt.getDevice().getAddress()+ ": " + gatt.getServices().toString());
 
-            gatt.setCharacteristicNotification(gatt.getService(UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")).getCharacteristic(UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")),true);
+//            for(BluetoothGattCharacteristic characteristic : gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristics()){
+            for(BluetoothGattService service : gatt.getServices()){
+                for(BluetoothGattCharacteristic characteristic : service.getCharacteristics()){
+                    Log.i(APP_NAME,"Service: " + service.getUuid().toString() + ", Characteristic: " + characteristic.getUuid().toString());
+                    int properties = characteristic.getProperties();
+
+                    for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()){
+                        Log.i(APP_NAME,"Descriptor: " + descriptor.getUuid().toString() );
+                    }
+                }
+            }
+//            for(BluetoothGattCharacteristic characteristic : gatt.getService(UUID.fromString("000000FF-0000-1000-8000-00805f9b34fb")).getCharacteristics()){
+//                Log.i(APP_NAME,"Characteristic: " + characteristic.getUuid().toString());
+//            }
+
+            boolean isNotified = gatt.setCharacteristicNotification(gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e")),true);
+            if (isNotified){
+                Log.i(APP_NAME,"notification start");
+            }else{
+                Log.e(APP_NAME,"notification cannot start");
+            }
+
+            BluetoothGattDescriptor descriptor = gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e")).getDescriptor(
+                    UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+            );
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            gatt.writeDescriptor(descriptor);
+
+//            BluetoothGattCharacteristic characteristic = gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e"));
+//            characteristic.setValue("hello");
+//            gatt.writeCharacteristic(characteristic);
+
+//            gatt.writeCharacteristic(gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e")));
+//            gatt.writeCharacteristic(gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e")));
+//            gatt.writeCharacteristic(gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e")));
+//
+//            gatt.readCharacteristic(gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e")));
         }
 
         @Override
@@ -225,31 +262,45 @@ public class MainActivity extends AppCompatActivity {
 
             Log.i(APP_NAME,"Characteristic has changed: " + gatt.getDevice().getAddress());
             Log.i(APP_NAME, characteristic.getStringValue(0));
+
+            BluetoothGattCharacteristic characteristic1 = gatt.getService(UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")).getCharacteristic(UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e"));
+            characteristic1.setValue(characteristic.getValue());
+            gatt.writeCharacteristic(characteristic1);
         }
 
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorRead(gatt, descriptor, status);
+
+            Log.i(APP_NAME,"onDescriptorRead: " + descriptor.getValue().toString() + gatt.getDevice().getAddress());
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
+
+            Log.i(APP_NAME,"onDescriptorWrite: " + descriptor.getValue().toString() +": " + gatt.getDevice().getAddress() + ": " + status);
         }
 
         @Override
         public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
             super.onReliableWriteCompleted(gatt, status);
+
+            Log.i(APP_NAME,"onReliableWriteCompleted");
         }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             super.onReadRemoteRssi(gatt, rssi, status);
+
+            Log.i(APP_NAME,"onReadRemoteRssi");
         }
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
+
+            Log.i(APP_NAME,"onMtuChanged");
         }
     }
 
